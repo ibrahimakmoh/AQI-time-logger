@@ -1,18 +1,293 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>AQI Time Tracker</title>
-  <link rel="manifest" href="manifest.json" />
-  <link rel="icon" href="icon.png" type="image/png" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Private Time Tracker - AQI</title>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@500&family=DM+Serif+Display&family=Amiri&display=swap" rel="stylesheet">
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" type="image/png" href="icon.png">
+  <meta name="theme-color" content="#1B447E">
+  <style>
+    :root {
+      --aqi-navy: #1B447E;
+      --aqi-sky: #648DBF;
+      --aqi-gold: #F3AF1C;
+      --aqi-charcoal: #4F5051;
+      --aqi-light: #F0EFEF;
+      --aqi-white: #FFFFFF;
+    }
+    body {
+      font-family: 'Barlow', sans-serif;
+      background-color: var(--aqi-white);
+      color: var(--aqi-charcoal);
+      padding: 2em;
+      max-width: 600px;
+      margin: auto;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+    .logo {
+      display: block;
+      margin: 0 auto 1em;
+      width: 120px;
+    }
+    h1 {
+      font-family: 'DM Serif Display', serif;
+      font-weight: bold;
+      color: var(--aqi-navy);
+      text-align: center;
+      margin-bottom: 0.5em;
+    }
+    #userDisplay {
+      text-align: center;
+      font-size: 1.1em;
+      font-weight: bold;
+      margin-bottom: 1em;
+    }
+    label, select, textarea, p {
+      font-family: 'Barlow', sans-serif;
+      font-weight: 500;
+      display: block;
+      margin-top: 1em;
+      font-size: 1em;
+    }
+    .ar {
+      font-family: 'Amiri', serif;
+      direction: rtl;
+      display: inline;
+    }
+    select, textarea {
+      width: 100%;
+      padding: 0.5em;
+      border: 1px solid var(--aqi-charcoal);
+      border-radius: 5px;
+      background: var(--aqi-white);
+    }
+    .btn-group button, .submit-button {
+      margin-top: 1em;
+      padding: 0.6em 1.2em;
+      font-family: 'Barlow', sans-serif;
+      font-weight: 500;
+      font-size: 1em;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      margin-right: 10px;
+    }
+    .btn-group button:hover, .submit-button:hover {
+      opacity: 0.9;
+    }
+    .clock-in {
+      background-color: var(--aqi-sky);
+      color: white;
+    }
+    .clock-out {
+      background-color: var(--aqi-navy);
+      color: white;
+    }
+    .export {
+      background-color: var(--aqi-gold);
+      color: black;
+    }
+    .submit-button {
+      background-color: var(--aqi-charcoal);
+      color: white;
+    }
+    table {
+      margin-top: 2em;
+      width: 100%;
+      border-collapse: collapse;
+      font-family: 'Barlow', sans-serif;
+      font-weight: 500;
+    }
+    th, td {
+      border: 1px solid #ccc;
+      padding: 0.5em;
+      text-align: left;
+    }
+    tfoot td {
+      font-weight: bold;
+      background: var(--aqi-light);
+    }
+  </style>
 </head>
 <body>
+  <img src="AQI logo.jpg" alt="AQI Logo" class="logo">
   <h1>AQI Time Tracker</h1>
-  <script>
-    const backendURL = "https://script.google.com/macros/s/AKfycbxjUGckdhnwrONAZYUvonUaJs7nlJDwYmBzdL7mrn0e9wQYGHzsiVA_dghQjmdz9dCM2w/exec";
-    console.log("Ready to sync with:", backendURL);
-  </script>
+  <div id="userDisplay"></div>
+
+  <fieldset>
+    <legend>Select Task(s) / <span class="ar">اختر المهام</span></legend>
+    <label><input type="checkbox" name="task" value="Teaching"> Teaching / <span class="ar">التدريس</span></label>
+    <label><input type="checkbox" name="task" value="Admin"> Admin / <span class="ar">الإدارة</span></label>
+    <label><input type="checkbox" name="task" value="Planning"> Planning / <span class="ar">التخطيط</span></label>
+    <label><input type="checkbox" name="task" value="Other"> Other / <span class="ar">أخرى</span></label>
+  </fieldset>
+
+  <label for="location">Branch / <span class="ar">الفرع</span></label>
+  <select id="location">
+    <option value="Virgin Mary Mosque">Virgin Mary Mosque / <span class="ar">مسجد مريم</span></option>
+    <option value="Australian Islamic Centre">Australian Islamic Centre / <span class="ar">المركز الإسلامي الأسترالي</span></option>
+    <option value="Maidstone Mosque">Maidstone Mosque / <span class="ar">مسجد ميدستون</span></option>
+    <option value="Circles of Light Centre">Circles of Light Centre / <span class="ar">مركز حلقات من نور</span></option>
+    <option value="Remote">Remote / <span class="ar">عن بُعد</span></option>
+  </select>
+
+  <label for="notes">Notes / <span class="ar">ملاحظات</span></label>
+  <textarea id="notes" rows="2"></textarea>
+
+  <div class="btn-group">
+    <button class="clock-in" onclick="prepareSubmission('IN')">Clock In / <span class="ar">بدء الدوام</span></button>
+    <button class="clock-out" onclick="prepareSubmission('OUT')">Clock Out / <span class="ar">إنهاء الدوام</span></button>
+    <button class="export" onclick="exportLogs()">Export CSV</button>
+    <p style="margin-top:0.5em; font-size: 0.9em; color: #333;">
+      This data is saved automatically. You may export a copy for your own records. /
+      <span class="ar">يتم حفظ هذه البيانات تلقائيًا. يمكنك تصدير نسخة للاحتفاظ بها.</span>
+    </p>
+  </div>
+
+  <div id="confirmSection" style="display:none;">
+    <p>Are you sure you want to submit this / <span class="ar">هل أنت متأكد أنك تريد تسجيل هذا؟</span></p>
+    <p id="actionType" style="display:none;"></p>
+    <button class="submit-button" onclick="submitLog()">Yes, Submit / <span class="ar">نعم، سجل</span></button>
+    <button onclick="cancelSubmission()">Cancel / <span class="ar">إلغاء</span></button>
+  </div>
+
+  <table>
+    <thead>
+      <tr><th>Time</th><th>Type</th><th>Task</th><th>Branch</th><th>Notes</th><th>Duration</th></tr>
+    </thead>
+    <tbody id="logTable"></tbody>
+    <tfoot>
+      <tr><td colspan="5">Total</td><td id="totalDuration"></td></tr>
+    </tfoot>
+  </table>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  const backendURL = "https://script.google.com/macros/s/AKfycbzVis2oqAKmKmxYDVGb5rgD-vzGG9uB50JaggQVYR80ePR72LNEQAtq5fGDYM9SjW1_0A/exec";
+
+  let userName = localStorage.getItem('aqiUserName');
+  if (!userName) {
+    userName = prompt("Enter your name / أدخل اسمك");
+    localStorage.setItem('aqiUserName', userName);
+  }
+  document.getElementById('userDisplay').textContent = `Welcome, ${userName}`;
+
+  function prepareSubmission(type) {
+    document.getElementById('confirmSection').style.display = 'block';
+    document.getElementById('actionType').textContent = type;
+    document.getElementById('actionType').dataset.pendingType = type;
+  }
+
+  function cancelSubmission() {
+    document.getElementById('confirmSection').style.display = 'none';
+  }
+
+  function submitLog() {
+    const type = document.getElementById('actionType').dataset.pendingType;
+    const locationField = document.getElementById('location');
+    let location = locationField.value;
+
+    if (type === 'IN') {
+      localStorage.setItem('lastClockInLocation', location);
+    } else if (type === 'OUT') {
+      const storedLocation = localStorage.getItem('lastClockInLocation');
+      if (storedLocation) {
+        location = storedLocation;
+        locationField.value = storedLocation;
+      }
+    }
+
+    const checkboxes = document.querySelectorAll('input[name="task"]:checked');
+    const tasks = Array.from(checkboxes).map(cb => cb.value).join(', ');
+    const now = new Date();
+    const time = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const notes = document.getElementById('notes').value.trim();
+    const row = `<tr><td>${time}</td><td>${type}</td><td>${tasks}</td><td>${location}</td><td>${notes}</td><td>-</td></tr>`;
+
+    document.getElementById('logTable').insertAdjacentHTML('beforeend', row);
+    document.getElementById('confirmSection').style.display = 'none';
+    document.getElementById('notes').value = '';
+    checkboxes.forEach(cb => cb.checked = false);
+    updateTotal();
+
+    try {
+      fetch(backendURL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: userName,
+          type,
+          task: tasks,
+          branch: location,
+          notes,
+          duration: '-' // Optional: calculate real duration
+        })
+      })
+      .then(res => {
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return res.text();
+      })
+      .then(msg => console.log('Submitted to sheet:', msg))
+      .catch(err => {
+        console.error('Sync error:', err);
+        alert("There was a problem syncing to the sheet. Please try again later.");
+      });
+    } catch (err) {
+      console.error('Unexpected error:', err);
+      alert("Unexpected error occurred while syncing.");
+    }
+  }
+
+  function updateTotal() {
+    const rows = document.querySelectorAll('#logTable tr');
+    let totalMinutes = 0;
+    let lastClockInTime = null;
+
+    rows.forEach(row => {
+      const cells = row.querySelectorAll('td');
+      const timeStr = cells[0].textContent.trim();
+      const type = cells[1].textContent.trim();
+      const [hour, minute] = timeStr.split(':').map(Number);
+      const currentTime = new Date();
+      currentTime.setHours(hour, minute, 0, 0);
+
+      if (type === 'IN') {
+        lastClockInTime = currentTime;
+      } else if (type === 'OUT' && lastClockInTime) {
+        const diffMs = currentTime - lastClockInTime;
+        const diffMins = Math.floor(diffMs / 60000);
+        totalMinutes += diffMins;
+        lastClockInTime = null;
+      }
+    });
+
+    const hours = Math.floor(totalMinutes / 60);
+    const minutes = totalMinutes % 60;
+    document.getElementById('totalDuration').textContent = `${hours}h ${minutes}m`;
+  }
+
+  function exportLogs() {
+    const rows = [['Time','Type','Task','Branch','Notes','Duration']];
+    document.querySelectorAll('#logTable tr').forEach(tr => {
+      const cells = Array.from(tr.children).map(td => td.textContent);
+      rows.push(cells);
+    });
+    const csvContent = rows.map(e => e.join(",")).join("\n");
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = "aqi_time_log.csv";
+    link.click();
+  }
+
+  window.prepareSubmission = prepareSubmission;
+  window.cancelSubmission = cancelSubmission;
+  window.submitLog = submitLog;
+  window.exportLogs = exportLogs;
+});
+</script>
 </body>
 </html>
